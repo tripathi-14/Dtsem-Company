@@ -129,6 +129,14 @@ const navLinks = [
   { name: "संपर्क", href: "#contact" },
 ];
 
+const HamburgerIcon = ({ isOpen }) => (
+    <div className={`hamburger-icon ${isOpen ? 'open' : ''}`}>
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+);
+
 const BrickIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor">
     <path d="M0 32C0 14.3 14.3 0 32 0H480c17.7 0 32 14.3 32 32V96H0V32zM0 128H224V256H0V128zM256 256V128H512V256H256zM0 288H512v128H0V288zM224 448H0v32c0 17.7 14.3 32 32 32H224V448zM512 448H256v64H480c17.7 0 32-14.3 32-32V448z"/>
@@ -304,12 +312,23 @@ const FounderCard = ({ founder }) => {
 function App() {
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [activeSection, setActiveSection] = React.useState('');
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
 
   const handleNavClick = (e, href) => {
     e.preventDefault();
-    document.querySelector(href).scrollIntoView({
-      behavior: 'smooth'
-    });
+    setIsMenuOpen(false);
+    
+    // Defer the scroll action to allow the DOM to update first.
+    // This is crucial for mobile, as it allows the `overflow: hidden`
+    // from the `menu-open` class to be removed before scrolling.
+    setTimeout(() => {
+        const element = document.querySelector(href);
+        if (element) {
+            element.scrollIntoView({
+                behavior: 'smooth'
+            });
+        }
+    }, 0);
   };
   
   React.useEffect(() => {
@@ -332,7 +351,6 @@ function App() {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           entry.target.classList.add('visible');
-          // For timeline, observe individual items
           if (entry.target.id === 'timeline') {
               entry.target.querySelectorAll('.timeline-item').forEach((item, index) => {
                 (item as HTMLElement).style.transitionDelay = `${index * 0.2}s`;
@@ -357,7 +375,7 @@ function App() {
   }, []);
 
   return (
-    <div className="app-container">
+    <div className={`app-container ${isMenuOpen ? 'menu-open' : ''}`}>
       <header className={`header ${isScrolled ? 'scrolled' : ''}`}>
           <div className="header-content">
             <h1 className="header-title">
@@ -375,9 +393,25 @@ function App() {
                     </a>
                 ))}
             </nav>
+            <button className="menu-toggle" onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Toggle navigation menu">
+                <HamburgerIcon isOpen={isMenuOpen} />
+            </button>
           </div>
       </header>
       
+      <div className={`mobile-nav-menu ${isMenuOpen ? 'open' : ''}`}>
+        {navLinks.map(link => (
+          <a 
+            key={link.name} 
+            href={link.href} 
+            className="mobile-nav-link"
+            onClick={(e) => handleNavClick(e, link.href)}
+          >
+            {link.name}
+          </a>
+        ))}
+      </div>
+
       <main>
         <section id="hero" className="hero content-section">
           <h1 className="hero-title">
